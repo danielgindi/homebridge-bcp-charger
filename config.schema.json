@@ -1,0 +1,66 @@
+{
+  "pluginAlias": "BcpCharger",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "chargers": {
+        "title": "Chargers",
+        "type": "array",
+        "required": true,
+        "items": {
+          "title": "Charger",
+          "type": "object",
+          "properties": {
+            "code": {
+              "title": "Charger's identifier code",
+              "type": "string",
+              "required": true
+            },
+
+            "password": {
+              "title": "Password",
+              "type": "string",
+              "required": true,
+              "default": "123456"
+            },
+
+            "name": {
+              "title": "Name",
+              "type": "string",
+              "required": true,
+              "default": "Charger"
+            },
+
+            "currentSwitches": {
+              "title": "Current switches",
+              "type": "array",
+              "required": false,
+              "items": {
+                "title": "Current switch",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "title": "Name",
+                    "type": "string",
+                    "required": true
+                  },
+
+                  "current": {
+                    "title": "Current (Ampers)",
+                    "type": "integer",
+                    "required": true,
+                    "default": 16,
+                    "minimum": 6,
+                    "maximum": 32
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
