@@ -27,7 +27,7 @@
     "homebridge-plugin"
   ],
   "dependencies": {
-    "@danielgindi/bcp-charger-api": "^1.0.4",
+    "@danielgindi/bcp-charger-api": "^1.0.5",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
