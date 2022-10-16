@@ -233,16 +233,14 @@ export class ChargerAccessory {
 
       if (this.chargerController?.host.ipAddress !== '255.255.255.255') {
         try {
-          this.platform.log.debug('Charger ' + this.config.code + ': Requesting realtime data');
-          await this.chargerController?.sendGetRealTimeData();
-
-          this.platform.log.debug('Charger ' + this.config.code + ': Requesting fault status');
-          await this.chargerController?.sendGetFaultStatus();
-
-          this.platform.log.debug('Charger ' + this.config.code + ': Requesting controls state');
-          await this.chargerController?.sendGetControlsState();
+          this.platform.log.debug('Charger ' + this.config.code + ': Requesting state');
+          await Promise.all([
+            this.chargerController?.sendGetRealTimeData(),
+            this.chargerController?.sendGetFaultStatus(),
+            this.chargerController?.sendGetControlsState(),
+          ]);
         } catch (err) {
-          this.platform.log.error('Charger ' + this.config.code + ': Failed to fetch data. ' + (err as Error).message);
+          this.platform.log.error('Charger ' + this.config.code + ': Failed to fetch state. ' + (err as Error).message);
           this.commandFaultCount++;
 
           if (this.commandFaultCount === 10) {
@@ -251,6 +249,6 @@ export class ChargerAccessory {
           }
         }
       }
-    }, 10000);
+    }, 5000);
   }
 }
