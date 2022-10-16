@@ -193,9 +193,7 @@ export class ChargerAccessory {
   }
 
   updateCurrentSwitches() {
-    this.platform.log.info('Max current is now', this.states.maxCurrent);
     for (const [current, currentSwitch] of this.currentSwitches) {
-      this.platform.log.info('Current' + current, this.states.maxCurrent, current === this.states.maxCurrent);
       currentSwitch.updateCharacteristic(
         this.platform.Characteristic.On,
         current === this.states.maxCurrent ? 1 : 0);
@@ -235,13 +233,13 @@ export class ChargerAccessory {
 
       if (this.chargerController?.host.ipAddress !== '255.255.255.255') {
         try {
-          this.platform.log.info('Charger ' + this.config.code + ': Requesting realtime data');
+          this.platform.log.debug('Charger ' + this.config.code + ': Requesting realtime data');
           await this.chargerController?.sendGetRealTimeData();
 
-          this.platform.log.info('Charger ' + this.config.code + ': Requesting fault status');
+          this.platform.log.debug('Charger ' + this.config.code + ': Requesting fault status');
           await this.chargerController?.sendGetFaultStatus();
 
-          this.platform.log.info('Charger ' + this.config.code + ': Requesting controls state');
+          this.platform.log.debug('Charger ' + this.config.code + ': Requesting controls state');
           await this.chargerController?.sendGetControlsState();
         } catch (err) {
           this.platform.log.error('Charger ' + this.config.code + ': Failed to fetch data. ' + (err as Error).message);
