@@ -4,6 +4,7 @@ export interface ChargerConfig {
     code: string;
     password: string;
     name: string;
+    refreshInterval: number;
 
     currentSwitches?: {
         current: number;

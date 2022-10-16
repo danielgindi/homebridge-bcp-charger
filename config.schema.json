@@ -33,6 +33,13 @@
               "default": "Charger"
             },
 
+            "refreshInterval": {
+              "title": "Refresh interval (milliseconds)",
+              "type": "integer",
+              "required": true,
+              "default": 5000
+            },
+
             "currentSwitches": {
               "title": "Current switches",
               "type": "array",

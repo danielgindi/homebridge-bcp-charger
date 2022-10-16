@@ -249,6 +249,6 @@ export class ChargerAccessory {
           }
         }
       }
-    }, 5000);
+    }, this.config.refreshInterval || 5000);
   }
 }
