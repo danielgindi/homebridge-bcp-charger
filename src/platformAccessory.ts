@@ -26,6 +26,7 @@ export class ChargerAccessory {
 
   private currentSwitches = new Map<number, Service>();
   private accessoryUuids = new Set<string>();
+  private accessories: PlatformAccessory[] = [];
 
   constructor(
     private readonly platform: ChargerHomebridgePlatform,
@@ -41,19 +42,23 @@ export class ChargerAccessory {
   }
 
   private getOrAddAccessory(uuid: string, displayName: string): PlatformAccessory {
-    const existingAccessory = this.platformAccessories.find(accessory => accessory.UUID === uuid);
-    if (existingAccessory) {
-      this.platform.log.info('Restoring existing accessory from cache:', existingAccessory.displayName, uuid);
-      this.accessoryUuids.add(uuid);
-      return existingAccessory;
+    let accessory = this.platformAccessories.find(accessory => accessory.UUID === uuid);
+    if (accessory) {
+      this.platform.log.info('Restoring existing accessory from cache:', accessory.displayName, uuid);
     } else {
       this.platform.log.info('Adding new accessory:', displayName, uuid);
-      const accessory = new this.platform.api.platformAccessory(displayName, uuid);
+      accessory = new this.platform.api.platformAccessory(displayName, uuid);
       this.platform.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.platformAccessories.push(accessory);
-      this.accessoryUuids.add(uuid);
-      return accessory;
     }
+
+    this.accessoryUuids.add(uuid);
+    this.accessories.push(accessory);
+
+    const accessoryInformationService = accessory.getService(this.platform.Service.AccessoryInformation);
+    accessoryInformationService?.setCharacteristic(this.platform.Characteristic.SerialNumber, this.config.code);
+
+    return accessory;
   }
 
   async setup() {
@@ -65,10 +70,6 @@ export class ChargerAccessory {
     const UUID_CHARGER_SWITCH = uuid.v5('charger-switch', mainAccessory.UUID);
 
     const legitimateServices = new Set();
-
-    const accessoryInformationService = mainAccessory.getService(this.platform.Service.AccessoryInformation);
-    accessoryInformationService?.setCharacteristic(this.platform.Characteristic.SerialNumber, this.config.code);
-    legitimateServices.add(accessoryInformationService?.UUID);
 
     const pluggedContactSensor = mainAccessory.getService('Plugged sensor') ||
       mainAccessory.addService(this.platform.Service.ContactSensor, 'Plugged sensor', UUID_PLUGGED_CONTACT_SENSOR);
@@ -123,9 +124,12 @@ export class ChargerAccessory {
     this.chargerController.resultTimeout = 3000;
 
     this.chargerController.on('charger_model', (model: ChargerModel) => {
-      accessoryInformationService
-        //?.setCharacteristic(this.platform.Characteristic.Model, model.version)
-        ?.setCharacteristic(this.platform.Characteristic.Version, model.firmwareVersion);
+      for (const accessory of this.accessories) {
+        const accessoryInformationService = accessory.getService(this.platform.Service.AccessoryInformation);
+        accessoryInformationService
+          ?.setCharacteristic(this.platform.Characteristic.Model, model.version)
+          ?.setCharacteristic(this.platform.Characteristic.Version, model.firmwareVersion);
+      }
     });
 
     this.chargerController.on('realtime_data', async (data: ChargerRealTimeData) => {
@@ -163,7 +167,8 @@ export class ChargerAccessory {
 
     for (const accessory of this.platformAccessories) {
       for (const service of accessory.services) {
-        if (legitimateServices.has(service.UUID)) {
+        if (legitimateServices.has(service.UUID) ||
+          service instanceof this.platform.Service.AccessoryInformation) {
           continue;
         }
 
