@@ -1,7 +1,7 @@
 # @danielgindi/homebridge-bcp-charger
 
 [![npm Version](https://badge.fury.io/js/@danielgindi%2Fhomebridge-bcp-charger.png)](https://npmjs.org/package/@danielgindi/homebridge-bcp-charger)
-[![Donate](https://badgen.net/badge/Donate/PayPal/91BE09)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=G6CELS3E997ZE)
+[![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins) [![Donate](https://badgen.net/badge/Donate/PayPal/91BE09)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=G6CELS3E997ZE)
 
 A homebridge plugin for controlling the BCP EV chargers (Z-Box compatible chargers).
 
