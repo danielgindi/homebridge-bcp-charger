@@ -169,9 +169,15 @@ export class ChargerAccessory {
 
     const riskFaultSensor = riskFaultSensorAccessory?.getService('High risk fault sensor') ||
       riskFaultSensorAccessory?.addService(riskFaultSensorType, 'High risk fault sensor', UUID_HIGH_RISK_FAULT_SENSOR);
+    if (riskFaultSensor) {
+      legitimateServices.add(riskFaultSensor.UUID);
+    }
 
     const operationFaultSensor = operationFaultSensorAccessory?.getService('Fault sensor') ||
       operationFaultSensorAccessory?.addService(operationFaultSensorType, 'Fault sensor', UUID_OPERATION_RISK_FAULT_SENSOR);
+    if (operationFaultSensorAccessory) {
+      legitimateServices.add(operationFaultSensorAccessory.UUID);
+    }
 
     for (const switchConfig of this.config.currentSwitches ?? []) {
       if (this.currentSwitches.has(switchConfig.current)) {
