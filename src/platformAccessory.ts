@@ -110,12 +110,12 @@ export class ChargerAccessory {
       case 'contact':
         riskFaultSensorType = this.platform.Service.ContactSensor;
         riskFaultSensorStateCharacteristic = this.platform.Characteristic.ContactSensorState;
-        riskFaultSensorStateOnValue = this.config.riskFaultSensor?.faultContactIsDetected
-          ? this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED
-          : this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
-        riskFaultSensorStateOffValue = this.config.riskFaultSensor?.faultContactIsDetected
+        riskFaultSensorStateOnValue = this.config.riskFaultSensor?.faultContactIsDetected === false
           ? this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED
           : this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED;
+        riskFaultSensorStateOffValue = this.config.riskFaultSensor?.faultContactIsDetected === false
+          ? this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED
+          : this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
         break;
 
       case 'leak':
@@ -140,15 +140,16 @@ export class ChargerAccessory {
     let operationFaultSensorStateOffValue: number;
 
     switch (this.config.operationFaultSensor?.type) {
+      default:
       case 'contact':
         operationFaultSensorType = this.platform.Service.ContactSensor;
         operationFaultSensorStateCharacteristic = this.platform.Characteristic.ContactSensorState;
-        operationFaultSensorStateOnValue = this.config.operationFaultSensor?.faultContactIsDetected
-          ? this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED
-          : this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
-        operationFaultSensorStateOffValue = this.config.operationFaultSensor?.faultContactIsDetected
+        operationFaultSensorStateOnValue = this.config.operationFaultSensor?.faultContactIsDetected === false
           ? this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED
           : this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED;
+        operationFaultSensorStateOffValue = this.config.operationFaultSensor?.faultContactIsDetected === false
+          ? this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED
+          : this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
         break;
 
       case 'leak':
@@ -158,7 +159,6 @@ export class ChargerAccessory {
         operationFaultSensorStateOffValue = this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
         break;
 
-      default:
       case 'smoke':
         operationFaultSensorType = this.platform.Service.SmokeSensor;
         operationFaultSensorStateCharacteristic = this.platform.Characteristic.SmokeDetected;
