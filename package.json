@@ -1,7 +1,7 @@
 {
   "displayName": "BCP EV Charger (Z-Box compatible)",
   "name": "@danielgindi/homebridge-bcp-charger",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A homebridge plugin controlling the BCP EV chargers (Z-Box compatible chargers)",
   "license": "MIT",
   "repository": {
