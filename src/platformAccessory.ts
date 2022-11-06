@@ -1,4 +1,4 @@
-import {PlatformAccessory, Service} from 'homebridge';
+import {PlatformAccessory, Service, Characteristic, WithUUID} from 'homebridge';
 
 import {ChargerHomebridgePlatform} from './platform';
 import {ChargerConfig} from './platformConfig';
@@ -68,6 +68,24 @@ export class ChargerAccessory {
     const UUID_PLUGGED_CONTACT_SENSOR = uuid.v5('plugged-contact', mainAccessory.UUID);
     const UUID_TEMPERATURE_SENSOR = uuid.v5('temperature', mainAccessory.UUID);
     const UUID_CHARGER_SWITCH = uuid.v5('charger-switch', mainAccessory.UUID);
+    const UUID_HIGH_RISK_FAULT_SENSOR = uuid.v5('risk-fault-sensor', mainAccessory.UUID);
+    const UUID_OPERATION_RISK_FAULT_SENSOR = uuid.v5('operation-fault-sensor', mainAccessory.UUID);
+
+    let chargerAccessory = mainAccessory;
+
+    const riskFaultSensorAccessory = this.config.riskFaultSensor
+      ? this.getOrAddAccessory(UUID_HIGH_RISK_FAULT_SENSOR,
+        this.config.riskFaultSensor.name ?? (this.config.name + ' - High risk fault sensor'))
+      : null;
+
+    const operationFaultSensorAccessory = this.config.operationFaultSensor
+      ? this.getOrAddAccessory(UUID_OPERATION_RISK_FAULT_SENSOR,
+        this.config.operationFaultSensor.name ?? (this.config.name + ' - Fault sensor'))
+      : null;
+
+    if (this.config.separateChargeSwitch) {
+      chargerAccessory = this.getOrAddAccessory(UUID_CHARGER_SWITCH, this.config.name + ' - Charge switch');
+    }
 
     const legitimateServices = new Set();
 
@@ -79,9 +97,81 @@ export class ChargerAccessory {
       mainAccessory.addService(this.platform.Service.TemperatureSensor, 'Temperature sensor', UUID_TEMPERATURE_SENSOR);
     legitimateServices.add(temperatureSensor.UUID);
 
-    const chargerSwitch = mainAccessory.getService('Charging Switch') ||
-      mainAccessory.addService(this.platform.Service.Switch, 'Charging Switch', UUID_CHARGER_SWITCH);
+    const chargerSwitch = chargerAccessory.getService('Charging Switch') ||
+      chargerAccessory.addService(this.platform.Service.Switch, 'Charging Switch', UUID_CHARGER_SWITCH);
     legitimateServices.add(chargerSwitch.UUID);
+
+    let riskFaultSensorType: typeof Service;
+    let riskFaultSensorStateCharacteristic: WithUUID<new () => Characteristic>;
+    let riskFaultSensorStateOnValue: number;
+    let riskFaultSensorStateOffValue: number;
+
+    switch (this.config.riskFaultSensor?.type) {
+      case 'contact':
+        riskFaultSensorType = this.platform.Service.ContactSensor;
+        riskFaultSensorStateCharacteristic = this.platform.Characteristic.ContactSensorState;
+        riskFaultSensorStateOnValue = this.config.riskFaultSensor?.faultContactIsDetected
+          ? this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED
+          : this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
+        riskFaultSensorStateOffValue = this.config.riskFaultSensor?.faultContactIsDetected
+          ? this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED
+          : this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED;
+        break;
+
+      case 'leak':
+        riskFaultSensorType = this.platform.Service.LeakSensor;
+        riskFaultSensorStateCharacteristic = this.platform.Characteristic.LeakDetected;
+        riskFaultSensorStateOnValue = this.platform.Characteristic.LeakDetected.LEAK_DETECTED;
+        riskFaultSensorStateOffValue = this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+        break;
+
+      default:
+      case 'smoke':
+        riskFaultSensorType = this.platform.Service.SmokeSensor;
+        riskFaultSensorStateCharacteristic = this.platform.Characteristic.SmokeDetected;
+        riskFaultSensorStateOnValue = this.platform.Characteristic.SmokeDetected.SMOKE_DETECTED;
+        riskFaultSensorStateOffValue = this.platform.Characteristic.SmokeDetected.SMOKE_NOT_DETECTED;
+        break;
+    }
+
+    let operationFaultSensorType: typeof Service;
+    let operationFaultSensorStateCharacteristic: WithUUID<new () => Characteristic>;
+    let operationFaultSensorStateOnValue: number;
+    let operationFaultSensorStateOffValue: number;
+
+    switch (this.config.operationFaultSensor?.type) {
+      case 'contact':
+        operationFaultSensorType = this.platform.Service.ContactSensor;
+        operationFaultSensorStateCharacteristic = this.platform.Characteristic.ContactSensorState;
+        operationFaultSensorStateOnValue = this.config.operationFaultSensor?.faultContactIsDetected
+          ? this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED
+          : this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
+        operationFaultSensorStateOffValue = this.config.operationFaultSensor?.faultContactIsDetected
+          ? this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED
+          : this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED;
+        break;
+
+      case 'leak':
+        operationFaultSensorType = this.platform.Service.LeakSensor;
+        operationFaultSensorStateCharacteristic = this.platform.Characteristic.LeakDetected;
+        operationFaultSensorStateOnValue = this.platform.Characteristic.LeakDetected.LEAK_DETECTED;
+        operationFaultSensorStateOffValue = this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+        break;
+
+      default:
+      case 'smoke':
+        operationFaultSensorType = this.platform.Service.SmokeSensor;
+        operationFaultSensorStateCharacteristic = this.platform.Characteristic.SmokeDetected;
+        operationFaultSensorStateOnValue = this.platform.Characteristic.SmokeDetected.SMOKE_DETECTED;
+        operationFaultSensorStateOffValue = this.platform.Characteristic.SmokeDetected.SMOKE_NOT_DETECTED;
+        break;
+    }
+
+    const riskFaultSensor = riskFaultSensorAccessory?.getService('High risk fault sensor') ||
+      riskFaultSensorAccessory?.addService(riskFaultSensorType, 'High risk fault sensor', UUID_HIGH_RISK_FAULT_SENSOR);
+
+    const operationFaultSensor = operationFaultSensorAccessory?.getService('Fault sensor') ||
+      operationFaultSensorAccessory?.addService(operationFaultSensorType, 'Fault sensor', UUID_OPERATION_RISK_FAULT_SENSOR);
 
     for (const switchConfig of this.config.currentSwitches ?? []) {
       if (this.currentSwitches.has(switchConfig.current)) {
@@ -89,7 +179,7 @@ export class ChargerAccessory {
       }
 
       const currentUuid = uuid.v5('current-switch-' + switchConfig.current, mainAccessory.UUID);
-      const accessory = this.getOrAddAccessory(currentUuid, this.config.name + ' - ' + switchConfig.name);
+      const accessory = this.getOrAddAccessory(currentUuid, switchConfig.name ?? (this.config.name + ' - ' + switchConfig.current + 'A'));
 
       const currentSwitch = accessory.getService(this.platform.Service.Switch) || accessory.addService(this.platform.Service.Switch);
 
@@ -123,6 +213,14 @@ export class ChargerAccessory {
     this.chargerController = new ChargerController(this.config.password);
     this.chargerController.resultTimeout = 3000;
 
+    const pluggedStateForPlugged = this.config.pluggedStateIsDetected
+      ? this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED
+      : this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
+
+    const pluggedStateForUnplugged = this.config.pluggedStateIsDetected
+      ? this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED
+      : this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED;
+
     this.chargerController.on('charger_model', (model: ChargerModel) => {
       for (const accessory of this.accessories) {
         const accessoryInformationService = accessory.getService(this.platform.Service.AccessoryInformation);
@@ -141,9 +239,7 @@ export class ChargerAccessory {
 
       pluggedContactSensor.updateCharacteristic(
         this.platform.Characteristic.ContactSensorState,
-        this.states.plugged
-          ? this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED
-          : this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED);
+        this.states.plugged ? pluggedStateForPlugged : pluggedStateForUnplugged);
 
       temperatureSensor.updateCharacteristic(
         this.platform.Characteristic.CurrentTemperature,
@@ -158,11 +254,28 @@ export class ChargerAccessory {
     });
 
     this.chargerController.on('fault_status', (status: ChargeFaultStatus) => {
-      temperatureSensor.updateCharacteristic(
-        this.platform.Characteristic.StatusFault,
-        status.highTemperature
-          ? this.platform.Characteristic.StatusFault.GENERAL_FAULT
-          : this.platform.Characteristic.StatusFault.NO_FAULT);
+      const hasRiskFault = status.overVoltage ||
+        status.overload ||
+        status.highTemperature ||
+        status.groundDetection ||
+        status.leakage ||
+        status.cpSignalAbnormal ||
+        status.emergencyStopButton ||
+        status.ccSignalAbnormal;
+
+      const hasOperationFault =
+        status.underVoltage ||
+        status.dlbWiring ||
+        status.dlbOffline ||
+        status.motorLock ||
+        status.sticking ||
+        status.contactor;
+
+      riskFaultSensor?.updateCharacteristic(riskFaultSensorStateCharacteristic,
+        hasRiskFault ? riskFaultSensorStateOnValue : riskFaultSensorStateOffValue);
+
+      operationFaultSensor?.updateCharacteristic(operationFaultSensorStateCharacteristic,
+        hasOperationFault ? operationFaultSensorStateOnValue : operationFaultSensorStateOffValue);
     });
 
     for (const accessory of this.platformAccessories) {

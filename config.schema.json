@@ -40,6 +40,20 @@
               "default": 5000
             },
 
+            "pluggedStateIsDetected": {
+              "title": "Perceive 'plugged' state as contact sensor being 'contact detected'",
+              "type": "boolean",
+              "required": true,
+              "default": true
+            },
+
+            "separateChargeSwitch": {
+              "title": "Present the charge switch as a separate accessory",
+              "type": "boolean",
+              "required": true,
+              "default": false
+            },
+
             "currentSwitches": {
               "title": "Current switches",
               "type": "array",
@@ -47,6 +61,7 @@
               "items": {
                 "title": "Current switch",
                 "type": "object",
+                "required": true,
                 "properties": {
                   "name": {
                     "title": "Name",
@@ -62,6 +77,102 @@
                     "minimum": 6,
                     "maximum": 32
                   }
+                }
+              }
+            },
+
+            "riskFaultSensor": {
+              "title": "Fault sensor for high risk issues",
+              "type": "object",
+              "required": false,
+              "properties": {
+                "name": {
+                  "title": "Name",
+                  "type": "string",
+                  "required": true,
+                  "default": "Fault sensor"
+                },
+
+                "type": {
+                  "title": "Sensor type",
+                  "type": "string",
+                  "required": true,
+                  "default": "smoke",
+                  "oneOf": [
+                    {
+                      "title": "Smoke sensor",
+                      "enum": [
+                        "smoke"
+                      ]
+                    },
+                    {
+                      "title": "Leak sensor",
+                      "enum": [
+                        "leak"
+                      ]
+                    },
+                    {
+                      "title": "Contact sensor",
+                      "enum": [
+                        "contact"
+                      ]
+                    }
+                  ]
+                },
+
+                "faultContactIsDetected": {
+                  "title": "Only when sensor type is 'contact', should fault state be 'contact detected'?",
+                  "type": "boolean",
+                  "required": true,
+                  "default": true
+                }
+              }
+            },
+
+            "operationFaultSensor": {
+              "title": "Fault sensor for operational issues",
+              "type": "object",
+              "required": false,
+              "properties": {
+                "name": {
+                  "title": "Name",
+                  "type": "string",
+                  "required": true,
+                  "default": "Fault sensor"
+                },
+
+                "type": {
+                  "title": "Sensor type",
+                  "type": "string",
+                  "required": true,
+                  "default": "smoke",
+                  "oneOf": [
+                    {
+                      "title": "Smoke sensor",
+                      "enum": [
+                        "smoke"
+                      ]
+                    },
+                    {
+                      "title": "Leak sensor",
+                      "enum": [
+                        "leak"
+                      ]
+                    },
+                    {
+                      "title": "Contact sensor",
+                      "enum": [
+                        "contact"
+                      ]
+                    }
+                  ]
+                },
+
+                "faultContactIsDetected": {
+                  "title": "Only when sensor type is 'contact', should fault state be 'contact detected'?",
+                  "type": "boolean",
+                  "required": true,
+                  "default": true
                 }
               }
             }
