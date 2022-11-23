@@ -13,6 +13,7 @@ import type {
 } from '@danielgindi/bcp-charger-api';
 import * as uuid from 'uuid';
 import {PLATFORM_NAME, PLUGIN_NAME} from './settings';
+import Timeout = NodeJS.Timeout;
 
 export class ChargerAccessory {
   private chargerController: ChargerController | null = null;
@@ -22,6 +23,7 @@ export class ChargerAccessory {
     plugged: null as (boolean | null),
     charging: null as (boolean | null),
     maxCurrent: null as (number | null),
+    isGettingReadyToCharge: false,
   };
 
   private currentSwitches = new Map<number, Service>();
@@ -200,15 +202,33 @@ export class ChargerAccessory {
       this.currentSwitches.set(switchConfig.current, currentSwitch);
     }
 
+    let notReadyTimeout: Timeout|null = null;
+
     chargerSwitch.getCharacteristic(this.platform.Characteristic.On)
       .onSet(async v => {
         if (v) {
           await this.chargerController?.sendSetChargeState(true);
           this.states.charging = true;
+          this.states.isGettingReadyToCharge = true;
+
+          if (notReadyTimeout) {
+            clearTimeout(notReadyTimeout);
+          }
+
+          notReadyTimeout = setTimeout(() => {
+            this.states.isGettingReadyToCharge = false;
+          }, 15000);
+
           chargerSwitch.updateCharacteristic(this.platform.Characteristic.On, 1);
         } else {
           await this.chargerController?.sendSetChargeState(false);
           this.states.charging = false;
+          this.states.isGettingReadyToCharge = false;
+
+          if (notReadyTimeout) {
+            clearTimeout(notReadyTimeout);
+          }
+
           chargerSwitch.updateCharacteristic(this.platform.Characteristic.On, 0);
         }
       });
@@ -240,7 +260,8 @@ export class ChargerAccessory {
       this.states.plugged = data.state === ChargerState.Standby ||
         data.state === ChargerState.Charging ||
         data.state === ChargerState.NotReady;
-      this.states.charging = data.state === ChargerState.Charging;
+      this.states.charging = data.state === ChargerState.Charging ||
+        (data.state === ChargerState.NotReady && this.states.isGettingReadyToCharge);
       this.states.maxCurrent = data.maxCurrent ?? null;
 
       pluggedContactSensor.updateCharacteristic(
